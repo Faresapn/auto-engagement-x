@@ -69,19 +69,32 @@ def login_interactive(handle: str):
 
 
 def _verify_logged_in(page: Page, handle: str) -> bool:
-    """Check if session is still valid."""
+    """Check if session is still valid. More tolerant to slow loads / UI changes."""
     try:
-        page.goto("https://x.com/home", wait_until="domcontentloaded", timeout=20000)
-        _human_delay(1500, 2500)
+        page.goto("https://x.com/home", wait_until="domcontentloaded", timeout=25000)
+        _human_delay(2000, 3500)
         # If redirected to login page, session dead
         if "/login" in page.url or "/i/flow/login" in page.url:
             return False
-        # Check for compose button
-        try:
-            page.wait_for_selector('[data-testid="SideNav_NewTweet_Button"]', timeout=8000)
+        # Multi-selector fallback (X sometimes changes testids)
+        selectors = [
+            '[data-testid="SideNav_NewTweet_Button"]',
+            '[data-testid="SideNav_AccountSwitcher_Button"]',
+            'a[data-testid="AppTabBar_Home_Link"]',
+            'nav[role="navigation"]',
+        ]
+        for sel in selectors:
+            try:
+                page.wait_for_selector(sel, timeout=6000)
+                return True
+            except PWTimeout:
+                continue
+        # None matched — probably logged out. But double-check URL not redirected
+        if "x.com/home" in page.url or "x.com/i/" in page.url:
+            # Still on home even if selectors missed — likely session OK, X just slow
+            print(f"[verify] selectors missed but URL={page.url} — assuming OK", file=sys.stderr)
             return True
-        except PWTimeout:
-            return False
+        return False
     except Exception as e:
         print(f"[verify] err: {e}", file=sys.stderr)
         return False
