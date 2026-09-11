@@ -100,6 +100,21 @@ def _verify_logged_in(page: Page, handle: str) -> bool:
         return False
 
 
+def _click_first(page: Page, selectors: list[str], timeout_each: int = 6000, action_name: str = "click") -> bool:
+    """Try each selector until one works. Returns True if clicked."""
+    for sel in selectors:
+        try:
+            page.wait_for_selector(sel, timeout=timeout_each, state="visible")
+            page.click(sel)
+            return True
+        except PWTimeout:
+            continue
+        except Exception:
+            continue
+    print(f"[{action_name}] all selectors failed: {selectors}", file=sys.stderr)
+    return False
+
+
 def post_tweet(handle: str, text: str, headless: bool = True, dry_run: bool = False) -> str | None:
     """Post standalone tweet. Returns tweet URL or None."""
     if dry_run:
@@ -111,23 +126,31 @@ def post_tweet(handle: str, text: str, headless: bool = True, dry_run: bool = Fa
         try:
             if not _verify_logged_in(page, handle):
                 raise RuntimeError(f"session expired for @{handle} — re-run login_interactive")
-            # Go to home & click compose
-            page.click('[data-testid="SideNav_NewTweet_Button"]')
-            _human_delay(1000, 2000)
-            # Type into compose area
-            page.click('[data-testid="tweetTextarea_0"]')
+            # Compose via URL shortcut (more stable than clicking button)
+            page.goto("https://x.com/compose/post", wait_until="domcontentloaded", timeout=25000)
+            _human_delay(2000, 3500)
+            # Multi-selector for compose textarea
+            if not _click_first(page, [
+                '[data-testid="tweetTextarea_0"]',
+                'div[role="textbox"][contenteditable="true"]',
+                'div[aria-label*="Post text"]',
+            ], action_name="compose-focus"):
+                raise RuntimeError("cannot find compose textarea")
             _human_delay()
-            # Type char-by-char to look human
             for ch in text:
                 page.keyboard.type(ch)
                 time.sleep(random.uniform(0.01, 0.05))
             _human_delay(1500, 3000)
-            # Click post
-            page.click('[data-testid="tweetButton"]')
+            # Multi-selector for post button
+            if not _click_first(page, [
+                '[data-testid="tweetButtonInline"]',
+                '[data-testid="tweetButton"]',
+                'button[data-testid*="tweetButton"]',
+            ], action_name="post-submit"):
+                raise RuntimeError("cannot find post button")
             _human_delay(3000, 5000)
-            # Save updated session (fresh cookies)
             _save_session(context, handle)
-            # Try to get tweet URL by navigating to profile
+            # Try get tweet URL
             page.goto(f"https://x.com/{handle}", wait_until="domcontentloaded", timeout=15000)
             _human_delay(2000, 3000)
             first_tweet = page.query_selector('article a[href*="/status/"]')
@@ -148,19 +171,37 @@ def reply_tweet(handle: str, tweet_url: str, text: str, headless: bool = True, d
         try:
             if not _verify_logged_in(page, handle):
                 raise RuntimeError(f"session expired for @{handle}")
-            page.goto(tweet_url, wait_until="domcontentloaded", timeout=20000)
-            _human_delay(2000, 3500)
-            # Click the reply button on the main tweet
-            page.click('[data-testid="reply"]')
+            page.goto(tweet_url, wait_until="domcontentloaded", timeout=25000)
+            _human_delay(2500, 4000)
+            # Click reply button (multi-selector)
+            if not _click_first(page, [
+                '[data-testid="reply"]',
+                'button[data-testid="reply"]',
+                'div[aria-label*="Reply"][role="button"]',
+                'button[aria-label*="Reply"]',
+            ], action_name="reply-btn"):
+                raise RuntimeError("cannot find reply button")
             _human_delay(1500, 2500)
-            # Type reply
-            page.click('[data-testid="tweetTextarea_0"]')
+            # Focus textarea
+            if not _click_first(page, [
+                '[data-testid="tweetTextarea_0"]',
+                'div[role="textbox"][contenteditable="true"]',
+                'div[aria-label*="Post your reply"]',
+                'div[aria-label*="Reply"] div[contenteditable="true"]',
+            ], action_name="reply-textarea"):
+                raise RuntimeError("cannot find reply textarea")
             _human_delay()
             for ch in text:
                 page.keyboard.type(ch)
                 time.sleep(random.uniform(0.01, 0.05))
             _human_delay(1500, 3000)
-            page.click('[data-testid="tweetButton"]')
+            # Submit reply
+            if not _click_first(page, [
+                '[data-testid="tweetButton"]',
+                '[data-testid="tweetButtonInline"]',
+                'button[data-testid*="tweetButton"]',
+            ], action_name="reply-submit"):
+                raise RuntimeError("cannot find reply submit button")
             _human_delay(3000, 5000)
             _save_session(context, handle)
             return "reply posted"
@@ -179,22 +220,36 @@ def quote_tweet(handle: str, tweet_url: str, text: str, headless: bool = True, d
         try:
             if not _verify_logged_in(page, handle):
                 raise RuntimeError(f"session expired for @{handle}")
-            page.goto(tweet_url, wait_until="domcontentloaded", timeout=20000)
+            # Shortcut: use intent URL for quote instead of clicking retweet menu
+            # This is much more stable than clicking the retweet button + dropdown
+            import urllib.parse
+            page.goto(tweet_url, wait_until="domcontentloaded", timeout=25000)
+            _human_delay(2500, 4000)
+            # Get tweet ID from URL for intent
+            tid = tweet_url.rsplit("/", 1)[-1].split("?")[0]
+            # Use quote intent URL directly (bypass retweet menu click)
+            quote_url = f"https://x.com/intent/post?url={urllib.parse.quote(tweet_url)}"
+            page.goto(quote_url, wait_until="domcontentloaded", timeout=25000)
             _human_delay(2000, 3500)
-            # Click retweet button
-            page.click('[data-testid="retweet"]')
-            _human_delay(700, 1200)
-            # Click "Quote" option
-            page.click('[data-testid="Dropdown"] a[href*="/compose/post"]')
-            _human_delay(1500, 2500)
-            # Type quote text
-            page.click('[data-testid="tweetTextarea_0"]')
+            # Focus quote textarea
+            if not _click_first(page, [
+                '[data-testid="tweetTextarea_0"]',
+                'div[role="textbox"][contenteditable="true"]',
+                'div[aria-label*="Post text"]',
+            ], action_name="quote-textarea"):
+                raise RuntimeError("cannot find quote textarea")
             _human_delay()
             for ch in text:
                 page.keyboard.type(ch)
                 time.sleep(random.uniform(0.01, 0.05))
             _human_delay(1500, 3000)
-            page.click('[data-testid="tweetButton"]')
+            # Submit
+            if not _click_first(page, [
+                '[data-testid="tweetButtonInline"]',
+                '[data-testid="tweetButton"]',
+                'button[data-testid*="tweetButton"]',
+            ], action_name="quote-submit"):
+                raise RuntimeError("cannot find quote submit button")
             _human_delay(3000, 5000)
             _save_session(context, handle)
             return "quote posted"
