@@ -1,8 +1,8 @@
-# Contoh config akun. Copy ke <handle>.yaml dan edit sesuai kebutuhan.
+# Sample account config. Copy to <handle>.yaml and edit for your needs.
 handle: yourhandle
 
-# Target akun buat scrape tweet — audiens mereka = target market kamu.
-# Isi 20-50 akun yang relevan sama niche.
+# Target accounts to scrape tweets from.
+# Their audience = your target market. Add 20-50 accounts relevant to your niche.
 targets:
   - shadcn
   - v0
@@ -19,11 +19,11 @@ targets:
   - karpathy
 
 # ═══════════════════════════════════════════════════════════════════
-# 3-TIER TARGET PICKER — prioritas engagement > velocity > recency
+# 3-TIER TARGET PICKER — priority: engagement > velocity > recency
 # ═══════════════════════════════════════════════════════════════════
-# 🔥 T1 FRESH: umur ≤60m + likes ≥100 → paling utama (early bird)
-# 🚀 T2 VIRAL: umur ≤6h + likes ≥500 → backup (momentum kuat)
-# 🕐 T3 RECENT: umur ≤6h + likes ≥20 → fallback (fresh engagement window)
+# 🔥 T1 FRESH: age ≤60m + likes ≥100 → early bird, ride the wave
+# 🚀 T2 VIRAL: age ≤6h + likes ≥500 → sustained momentum
+# 🕐 T3 RECENT: age ≤6h + likes ≥20 → fresh engagement window
 
 fresh_max_age_min: 60
 fresh_min_likes: 100
@@ -34,25 +34,25 @@ viral_min_likes: 500
 recent_max_age_hours: 6
 recent_min_likes: 20
 
-# Limit & pace
-daily_max: 12               # max tweet/hari
-min_delay_sec: 3600         # 60 menit
-max_delay_sec: 6000         # 100 menit
+# Rate limiting
+daily_max: 12               # max tweets/day
+min_delay_sec: 3600         # 60 min
+max_delay_sec: 6000         # 100 min
 
-# Mix probabilitas (total = 1.0)
+# Action mix (must sum to 1.0)
 mix:
   reply: 0.60
   quote: 0.30
   post: 0.10
 
-# Standalone post topics (dipilih random)
+# Topics for standalone posts (randomly picked)
 post_topics:
-  - "one prompt shipped better landing page than 3 weeks of agency work"
+  - "one prompt shipped a better landing page than 3 weeks of agency work"
   - "the real bottleneck in shipping isnt code, its knowing what to prompt"
   - "prompt libraries will replace half of design agencies in 2 years"
-  - "hot take on AI hype cycle"
+  - "hot take on the AI hype cycle"
   - "shipped something small today, felt good"
 
-# CTA (optional — LLM sisipkan link natural kalau topic match)
+# Optional CTA — LLM inserts your link naturally when topic matches
 cta_url: https://yoursite.com
-cta_rate: 0.35              # 35% chance CTA disisipkan
+cta_rate: 0.35              # 35% chance of CTA insertion

@@ -1,51 +1,53 @@
-# Auto Engagement X
+# 🚀 Auto Engagement X
 
-**Playwright-based X (Twitter) auto engagement bot.** Zero X API cost. Uses browser cookies + Claude LLM to post smart replies/quotes/tweets that look human.
+**A smart, browser-based X (Twitter) engagement bot.** Skip the $0.05/read + $0.01/write X API fees — this uses Playwright with your existing browser cookies and Claude LLM to post natural, human-like replies, quotes, and tweets.
 
-Built for accounts where you want organic engagement without paying X API credits ($0.01/write, $0.05/read).
-
-## Fitur utama
-
-- 🌐 **Browser automation** (Playwright) — no X API, no credits
-- 🍪 **Cookie import** dari Chrome/browser existing (ga perlu login ulang)
-- 🧠 **Claude LLM** (Sonnet/Opus) — reply/quote/post yang natural, casual, ga bot-ish
-- 🎯 **3-tier target picker** — fresh > viral > recent (prioritas engagement window)
-- 🕒 **Human-like delays** (60-100 menit random antar aksi)
-- 📊 **Daily cap** — max N tweet/hari per akun (default 12)
-- 🔗 **Smart CTA** — LLM sisipkan link natural (bukan brutal append)
-- 📝 **Full transaction log** — tiap post/reply/quote ke-log JSONL
-- ⚙️ **Per-account YAML config** — target, mix, delay, CTA rate
+Built for creators who want organic reach without burning API credits.
 
 ---
 
-## Kenapa metode ini?
+## ✨ Features
+
+- 🌐 **Browser automation** with Playwright — zero X API cost
+- 🍪 **Cookie import** from your existing Chrome/browser (no re-login needed)
+- 🧠 **Claude LLM** (Sonnet/Opus) — replies that sound like a real human, not a bot
+- 🎯 **3-tier target picker** — Fresh > Recent Viral > Recent (engagement window first)
+- 🕒 **Human-like delays** (60-100 min random between actions)
+- 📊 **Daily cap** — max N tweets/day per account (default 12)
+- 🔗 **Smart CTA** — LLM naturally inserts your link when the topic fits (no brutal spam)
+- 📝 **Full JSONL transaction log** — every post/reply/quote tracked
+- ⚙️ **Per-account YAML config** — targets, mix, delay, CTA rate
+
+---
+
+## 💡 Why This Method?
 
 **X API v2 pricing:**
 - Post/reply/quote = **$0.01/tweet** (write credit)
-- Search/timeline = **$0.05/request** (read credit) — cepet nguras balance!
+- Search/timeline = **$0.05/request** (read credit) — burns balance fast
 
-**Browser bot = $0 X cost.** Kamu cuma bayar LLM (~$1-3/hari kalau pake Claude Sonnet).
+**Browser bot = $0 X cost.** You only pay for the LLM (~$1-3/day with Claude Sonnet).
 
-**Trade-off:** rawan suspend kalau ga hati-hati. Best practice:
-- Delay panjang (60-100 menit antar aksi)
-- Daily cap rendah (12/hari max)
-- Cookie dari browser trusted (bukan fresh login)
+**Trade-off:** Higher suspension risk if misused. Best practices:
+- Long delays (60-100 min between actions)
+- Low daily cap (12/day max)
+- Use cookies from a trusted browser (avoid "temporarily limited" errors)
 
 ---
 
-## Prerequisites
+## 📋 Prerequisites
 
-- **macOS/Linux** (Playwright didukung penuh)
+- **macOS / Linux** (Playwright fully supported)
 - **Python 3.9+**
-- **Chrome/Brave/Edge** — buat export cookie
-- **Extension "Cookie-Editor"** di browser: [Chrome Store link](https://chromewebstore.google.com/detail/cookie-editor/hlkenndednhfkekhgcdicdfddnkalmdm)
-- **LLM API access** — Claude via Anthropic API atau proxy (OpenRouter, 9router, dll)
+- **Chrome / Brave / Edge** — for cookie export
+- **"Cookie-Editor" extension** in browser: [Chrome Store](https://chromewebstore.google.com/detail/cookie-editor/hlkenndednhfkekhgcdicdfddnkalmdm)
+- **LLM API access** — Claude via Anthropic API or a proxy (OpenRouter, LiteLLM, etc.)
 
 ---
 
-## Setup — Step by Step
+## 🛠 Setup — Step by Step
 
-### 1. Clone repo & install
+### 1. Clone & Install
 
 ```bash
 git clone https://github.com/Faresapn/auto-engagement-x.git ~/auto-engagement-x
@@ -55,35 +57,39 @@ cd ~/auto-engagement-x
 python3 -m venv venv
 source venv/bin/activate
 
-# Install deps
+# Install dependencies
 pip install --upgrade pip
-pip install playwright anthropic pyyaml
+pip install -r requirements.txt
 
-# Install Chromium browser (buat Playwright)
+# Install Chromium (for Playwright)
 python -m playwright install chromium
 ```
 
-### 2. Set LLM API key
+### 2. Configure LLM API Key
 
-Bot pakai Claude (Anthropic). Set env var:
+Copy the example env file:
 
 ```bash
-# Opsi A: langsung Anthropic
-export LLM_API_KEY="sk-ant-xxx"
-export LLM_MODEL="claude-sonnet-4-5-20250929"
-export LLM_BASE_URL="https://api.anthropic.com/v1"
-
-# Opsi B: via proxy (OpenRouter, 9router, dll)
-export LLM_API_KEY="sk-or-xxx"
-export LLM_MODEL="anthropic/claude-3.5-sonnet"
-export LLM_BASE_URL="https://openrouter.ai/api/v1"
+cp .env.example .env
 ```
 
-Simpan di `~/.zshrc` atau `~/.bashrc` biar persistent. Atau edit `run.sh` (lihat step 5).
+Edit `.env`:
 
-### 3. Buat config per akun
+```bash
+# Option A: Direct Anthropic
+LLM_API_KEY=sk-ant-your-key-here
+LLM_MODEL=claude-sonnet-4-5-20250929
+LLM_BASE_URL=https://api.anthropic.com/v1
 
-Copy template & edit:
+# Option B: Via OpenRouter
+# LLM_API_KEY=sk-or-your-key
+# LLM_MODEL=anthropic/claude-3.5-sonnet
+# LLM_BASE_URL=https://openrouter.ai/api/v1
+```
+
+### 3. Create Per-Account Config
+
+Copy the example and customize:
 
 ```bash
 cp config/example.yaml config/<handle>.yaml
@@ -92,104 +98,104 @@ cp config/example.yaml config/<handle>.yaml
 Edit `config/<handle>.yaml`:
 
 ```yaml
-handle: yourhandle    # X handle tanpa @
+handle: yourhandle    # X handle without @
 
-# Target akun buat scrape tweet (yang audiens-nya cocok sama kamu)
+# Target accounts to scrape (their audience = your target market)
 targets:
   - shadcn
   - v0
   - rauchg
-  # ... tambahin sesuai niche
+  # ... add relevant accounts for your niche
 
-# 3-TIER target picker
-fresh_max_age_min: 60      # T1: tweet umur ≤60 menit
+# 3-TIER target picker (see explanation below)
+fresh_max_age_min: 60
 fresh_min_likes: 100
 
-viral_max_age_hours: 6     # T2: tweet umur ≤6 jam
+viral_max_age_hours: 6
 viral_min_likes: 500
 
-recent_max_age_hours: 6    # T3: fallback
+recent_max_age_hours: 6
 recent_min_likes: 20
 
-# Limit & pace
-daily_max: 12              # max post/hari
-min_delay_sec: 3600        # 60 menit
-max_delay_sec: 6000        # 100 menit
+# Rate limiting
+daily_max: 12              # max tweets/day
+min_delay_sec: 3600        # 60 min
+max_delay_sec: 6000        # 100 min
 
-# Mix: reply/quote/post (total = 1.0)
+# Action mix (total = 1.0)
 mix:
   reply: 0.60
   quote: 0.30
   post: 0.10
 
-# Standalone post topics (dipilih random tiap aksi post)
+# Topics for standalone posts (randomly picked)
 post_topics:
-  - "topic 1"
-  - "topic 2"
+  - "one prompt shipped a better landing page than 3 weeks of agency work"
+  - "the real bottleneck in shipping isnt code, its knowing what to prompt"
 
-# CTA (optional)
+# Optional CTA (LLM naturally inserts if topic matches)
 cta_url: https://yoursite.com
-cta_rate: 0.35             # 35% chance CTA disisipkan LLM natural
+cta_rate: 0.35             # 35% chance CTA is inserted
 ```
 
-### 4. Import cookie dari browser
+### 4. Import Cookies from Browser
 
-**Ga perlu login ulang!** Import cookie session dari Chrome yang udah login.
+**No re-login needed!** Just import your existing session cookies from Chrome.
 
-**a.** Install extension **"Cookie-Editor"** di Chrome (link atas ↑)
+**a.** Install the **Cookie-Editor** Chrome extension ([link above ↑](https://chromewebstore.google.com/detail/cookie-editor/hlkenndednhfkekhgcdicdfddnkalmdm))
 
-**b.** Buka `x.com` di Chrome, pastikan **udah login** di akun target
+**b.** Open `x.com` in Chrome, make sure you're **logged in** to the target account
 
-**c.** Klik icon extension → **Export** → pilih **JSON** → copy/download
+**c.** Click the extension icon → **Export** → select **JSON** → copy/download
 
-**d.** Save ke `~/auto-engagement-x/import/<handle>.json`
+**d.** Save to `~/auto-engagement-x/import/<handle>.json`
 
-Atau kalau ke-copy ke clipboard:
+Or if it copied to clipboard:
 ```bash
-pbpaste > import/<handle>.json    # macOS
+pbpaste > import/<handle>.json                     # macOS
 xclip -selection clipboard -o > import/<handle>.json  # Linux
 ```
 
-**e.** Import ke session Playwright:
+**e.** Import into Playwright session:
 ```bash
 ./run.sh import <handle>
 ```
 
-Bot bakal:
-1. Parse cookie
-2. Save ke `sessions/<handle>.json` (format Playwright)
-3. Buka browser headed → verify masuk ke home timeline
-4. Kalau ✅ VALID → siap dipake
-5. Kalau ❌ INVALID → re-export cookie (pastikan login di Chrome)
+The bot will:
+1. Parse cookies
+2. Save to `sessions/<handle>.json` (Playwright storage_state format)
+3. Open a headed browser → verify home timeline loads
+4. If ✅ VALID → ready to use
+5. If ❌ INVALID → re-export cookies (make sure you're logged in on Chrome)
 
-### 5. Test dry-run (ga beneran post)
+### 5. Dry-Run Test (No Actual Posting)
 
 ```bash
 ./run.sh dry <handle>
 ```
 
-Bot bakal:
-- Pilih random action (reply/quote/post)
-- Scan target via Playwright
-- Generate teks pake LLM
-- **Print `[DRY-RUN] would ...`** — GA post beneran
+The bot will:
+- Pick a random action (reply/quote/post)
+- Scan targets via Playwright
+- Generate text with LLM
+- **Print `[DRY-RUN] would ...`** — NO actual post
 
-### 6. Test live 1-shot
+### 6. Live 1-Shot Test
 
-Kalau dry-run OK:
+If dry-run looks good:
 ```bash
 ./run.sh test <handle>
 ```
 
-Ini beneran post 1x. Cek `x.com/<handle>` — muncul tweet baru?
+This actually posts 1 tweet. Check `x.com/<handle>` — should see the new tweet.
 
-### 7. Production loop
+### 7. Production Loop
 
 ```bash
 ./run.sh loop <handle>
 ```
 
-Loop sampai `daily_max`, delay random. Kalau mau background:
+Runs until `daily_max` is reached, with random delays. To run in background:
 ```bash
 nohup ./run.sh loop <handle> > logs/loop.out 2>&1 &
 tail -f logs/loop.out
@@ -197,166 +203,172 @@ tail -f logs/loop.out
 
 ---
 
-## Commands (via `run.sh`)
+## ⚙️ Commands (via `run.sh`)
 
 ```bash
-./run.sh login <handle>              # Login interactive (backup kalau import gagal)
-./run.sh import <handle>             # Import cookie dari import/<handle>.json
-./run.sh dry <handle>                # Dry-run 1 aksi (ga post)
-./run.sh test <handle>               # Live 1 aksi
+./run.sh login <handle>              # Interactive login (backup if import fails)
+./run.sh import <handle>             # Import cookies from import/<handle>.json
+./run.sh dry <handle>                # Dry-run 1 action (no post)
+./run.sh test <handle>               # Live 1 action
 ./run.sh loop <handle>               # Production loop
-./run.sh read <handle> <target>      # Test scrape timeline target
-./run.sh status <handle>             # Cek berapa post hari ini
+./run.sh read <handle> <target>      # Test scrape a target's timeline
+./run.sh status <handle>             # Check today's post count
 ```
 
 ---
 
-## 3-Tier Target Picker (yang bikin bot pinter)
+## 🎯 3-Tier Target Picker (The Smart Part)
 
-Tiap iterasi, bot scan semua target dan klasifikasi tiap tweet:
+Every iteration, the bot scans all targets and classifies each tweet:
 
-| Tier | Kriteria | Yang dipilih |
+| Tier | Criteria | Selection Strategy |
 |---|---|---|
-| **🔥 T1 FRESH** | age ≤60m + likes ≥100 | Velocity tertinggi (likes/menit) |
-| **🚀 T2 VIRAL** | age ≤6h + likes ≥500 | Velocity tertinggi (momentum kuat) |
-| **🕐 T3 RECENT** | age ≤6h + likes ≥20 | Paling muda (fallback engagement) |
-| **❌ SKIP** | Ga ada match | Tunggu iterasi berikutnya |
+| **🔥 T1 FRESH** | age ≤60m + likes ≥100 | Highest velocity (likes/min) |
+| **🚀 T2 VIRAL** | age ≤6h + likes ≥500 | Highest velocity (sustained momentum) |
+| **🕐 T3 RECENT** | age ≤6h + likes ≥20 | Youngest (fallback engagement) |
+| **❌ SKIP** | No match | Wait for next iteration |
 
-**Kenapa ini bagus?**
-- **T1**: Reply tweet 30 menit umur, 300 likes, lagi naik → kalau tweet jadi viral, reply lo di top (ratusan ribu impressions)
-- **T2**: Kalau ga ada fresh, ambil viral yg masih muda (< 6 jam) & momentum kuat
-- **T3**: Kalau kering banget, minimal reply tweet baru biar engagement window masih terbuka
+**Why this works:**
+- **T1**: Reply to a 30-min-old tweet with 300 likes that's climbing → if it goes viral, your reply is at the top (potentially hundreds of thousands of impressions)
+- **T2**: If no fresh tweets, grab a viral one that's still young (<6h) with strong momentum
+- **T3**: When everything is quiet, at least reply to something recent (engagement window still open) — never reply to old tweets where engagement has died
 
 ---
 
-## LLM Rules (adapted dari post @beny)
+## 🧠 LLM Rules (Inspired by @achmadbeny's viral method)
 
-Bot pake system prompt yang enforce:
-- Casual English, 10-50 kata
-- Lowercase mostly
+The bot uses a system prompt that enforces:
+- Casual English, 10-50 words
+- Mostly lowercase
 - No hashtags, no @mentions, no period at end
-- 1-2 emoji kalau fit (💀 🥴 😂 🔥)
-- **React ke isi tweet** (bukan generic "amazing", "wow")
-- Sound HUMAN, bukan AI
+- 1-2 emojis when they fit (💀 🥴 😂 🔥)
+- **React to the tweet content** (not generic "amazing", "wow")
+- Sound HUMAN, not AI
 
-**Smart CTA mode** (kalau `cta_rate` > 0):
-- LLM decide sisipkan link **organik** — kalau topic match
-- Contoh: "shipped mine last week in 2h. found the prompt here: https://site.com"
-- Kalau topic ga related, LLM **skip link** (bukan brutal append)
+**Smart CTA mode** (when `cta_rate > 0`):
+- LLM decides whether to insert the link **organically** — only if the topic matches
+- Example: `"shipped mine last week in 2h. found the prompt here: https://site.com"`
+- If the topic doesn't fit, LLM **skips the link** (no brutal append)
 
 ---
 
-## Struktur folder
+## 📁 Project Structure
 
 ```
 auto-engagement-x/
-├── run.sh                     # Main wrapper (activate venv + env)
+├── run.sh                     # Main wrapper (activates venv + loads env)
 ├── main.py                    # Orchestrator (loop, action picker, sleep)
 ├── browser_poster.py          # Playwright: login/post/reply/quote/read
 ├── llm_writer.py              # Claude LLM: gen_reply/quote/post
 ├── import_cookies.py          # Import Chrome cookies → Playwright session
 ├── config/
-│   ├── example.yaml           # Template config
-│   └── <handle>.yaml          # Per-account config
+│   ├── example.yaml           # Config template
+│   └── <handle>.yaml          # Per-account config (gitignored)
 ├── sessions/
 │   └── <handle>.json          # Playwright storage_state (cookie + localStorage)
 ├── import/
-│   └── <handle>.json          # Chrome-exported cookies (source)
+│   └── <handle>.json          # Chrome-exported cookies (source, gitignored)
 ├── state/
-│   └── replied-<handle>.log   # Dedup: URL tweet yg udah di-reply
+│   └── replied-<handle>.log   # Dedup: URLs already replied to
 ├── logs/
-│   └── tx-<handle>.jsonl      # Transaction log (per aksi)
+│   └── tx-<handle>.jsonl      # Transaction log (per action)
 ├── venv/                      # Python virtualenv
-└── README.md                  # File ini
+└── README.md                  # This file
 ```
 
 ---
 
-## Best practices (biar ga banned)
+## 🛡 Best Practices (to avoid bans)
 
-1. **Delay panjang** — 60+ menit antar aksi. Bot delay lo ke 60-100m default
-2. **Daily cap rendah** — 12-15/hari max. Jangan lebih dari 20/hari
-3. **Cookie dari browser trusted** — jangan fresh login (kena "temporarily limited")
-4. **Tumbal 1 akun dulu** — tes 1-2 minggu, kalau survive baru replicate
-5. **Ganti user-agent random** kalau paranoid (edit `browser_poster.py`)
-6. **Ga usah post 24/7** — kasih jeda malam/pagi (edit `main.py` add time-of-day check)
-7. **Ga usah balas semua tweet** — mix natural, ada yg skip
+1. **Long delays** — 60+ min between actions. Default is 60-100min
+2. **Low daily cap** — 12-15/day max. Don't exceed 20/day
+3. **Cookies from trusted browser** — never fresh login (hits "temporarily limited")
+4. **Start with 1 sacrificial account** — test 1-2 weeks, if it survives then replicate
+5. **Rotate user-agent** if paranoid (edit `browser_poster.py`)
+6. **Don't post 24/7** — add day/night breaks (edit `main.py` with time-of-day check)
+7. **Skip some tweets** — natural mixing, don't reply to everything
 
 ---
 
-## Troubleshooting
+## 🐛 Troubleshooting
 
 ### `session expired for @xxx`
 
-Cookie kadaluarsa. Re-import:
+Cookies expired. Re-import:
 ```bash
-# 1. Buka Chrome, x.com (pastikan login)
-# 2. Cookie-Editor → Export JSON → save ke import/<handle>.json
+# 1. Open Chrome, x.com (make sure you're logged in)
+# 2. Cookie-Editor → Export JSON → save to import/<handle>.json
 # 3.
 ./run.sh import <handle>
 ```
 
 ### `LLM client not configured`
 
-Env `LLM_API_KEY` ga ke-set. Cek:
+`LLM_API_KEY` env not set. Check:
 ```bash
-echo $LLM_API_KEY   # harus ada
+echo $LLM_API_KEY   # should have value
 ```
 
-Set di `~/.zshrc` atau edit `run.sh` inline.
+Set in `.env` or `~/.zshrc`.
 
 ### `no hot target found`
 
-Semua tier kering. Solusi:
-- Turunin `recent_min_likes` (misal dari 20 → 10)
-- Tambahin `targets` yang lebih aktif
-- Cek `logs/tx-<handle>.jsonl` — mungkin `daily_max` udah kena
+All tiers empty. Solutions:
+- Lower `recent_min_likes` (e.g., 20 → 10)
+- Add more active accounts to `targets`
+- Check `logs/tx-<handle>.jsonl` — maybe `daily_max` is hit
 
-### `We've temporarily limited your login` pas login interactive
+### `We've temporarily limited your login` during interactive login
 
-X detect fresh browser. Solusi: **gunakan cara import cookie** (step 4), jangan login manual.
+X detected a fresh browser. Solution: **use the cookie import method** (step 4), don't login manually.
 
-### Bot ke-suspend
+### Bot got suspended
 
-- Cek delay (harus 60+ menit)
-- Cek daily_max (jangan >20/hari)
-- Cek isi post — kalau spammy, LLM prompt harus di-refine
-- Kalau kena, lo cuma bisa: (1) coba unsuspend via appeal X, (2) bikin akun baru
-
----
-
-## Roadmap / Ideas
-
-- [ ] Scanner terpisah — scan tiap 5-10 menit, queue fresh tweets, main loop pilih dari queue
-- [ ] Time-of-day filter — post cuma jam sibuk (misal 9AM-11PM local)
-- [ ] Per-target min_likes — akun kecil threshold lebih rendah
-- [ ] Multi-persona LLM — voice.md per akun biar tone beda-beda
-- [ ] Image reply — kalau tweet ada gambar, LLM baca image + reply visual
-- [ ] Analytics dashboard — impression tracking dari X native (bukan API)
+- Check delays (must be 60+ min)
+- Check daily_max (never >20/day)
+- Check post content — if too spammy, refine LLM system prompt
+- If suspended: (1) try appealing to X, (2) create a new account
 
 ---
 
-## Legal & Ethical Notes
+## 🗺 Roadmap
 
-**Ini melanggar Terms of Service X** (automation without API). Risk:
-- Akun ke-suspend permanen
-- Kehilangan follower & konten
-- Ga bisa dispute kalau kena flagged
-
-**Tanggung jawab lo sepenuhnya.** Author repo ga bertanggung jawab atas suspend / loss.
-
-Gunakan buat riset / eksperimen. Jangan buat spam, scam, atau akun utama yang penting.
+- [ ] Separate scanner — scan every 5-10 min, queue fresh tweets, main loop picks from queue
+- [ ] Time-of-day filter — post only during peak hours (e.g., 9AM-11PM local)
+- [ ] Per-target min_likes — smaller accounts get lower threshold
+- [ ] Multi-persona LLM — voice.md per account for different tones
+- [ ] Image reply — if tweet has media, LLM reads image + generates visual-aware reply
+- [ ] Analytics dashboard — track impressions from X native (not API)
 
 ---
 
-## Credits
+## ⚖️ Legal & Ethical Notes
 
-- Metode terinspirasi dari [@AchmadBeny](https://facebook.com/) — post viral tentang Playwright + browser bot untuk kejar impressions X monetisasi
-- Rules reply diadaptasi dari post beliau + LLM tuning
+**This violates X's Terms of Service** (automation without their API). Risks:
+- Permanent account suspension
+- Loss of followers & content
+- No dispute options if flagged
+
+**Use at your own risk.** The author is not responsible for suspensions or losses.
+
+Use for research/experimentation. Do NOT use for spam, scams, or your main important account.
+
+---
+
+## 🙏 Credits
+
+- Method inspired by [@AchmadBeny](https://facebook.com/) — viral post about Playwright + browser bots for X monetization
+- Reply rules adapted from his post + LLM tuning
 - Made with ❤️ by [@Faresapn](https://github.com/Faresapn)
 
 ---
 
-## License
+## 📄 License
 
-MIT — do whatever you want, at your own risk.
+MIT — do whatever you want, at your own risk. See [LICENSE](./LICENSE) for full text.
+
+---
+
+## ⭐ If This Helped You
+
+Give it a star on GitHub! And consider trying **[PromptedSite](https://promptedsite.com)** — 500+ AI design prompts for shipping beautiful websites fast.
