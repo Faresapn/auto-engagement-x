@@ -81,7 +81,7 @@ def load_exported_cookies(path: Path) -> list[dict]:
     return out
 
 
-def import_and_save(handle: str, cookie_json_path: Path):
+def import_and_save(handle: str, cookie_json_path: Path, no_verify: bool = False):
     """Load Chrome-exported cookies → save as Playwright storage_state."""
     if not cookie_json_path.exists():
         raise FileNotFoundError(f"Cookie file not found: {cookie_json_path}")
@@ -99,10 +99,10 @@ def import_and_save(handle: str, cookie_json_path: Path):
     session_path.write_text(json.dumps(storage, indent=2))
     print(f"[import] saved to {session_path}")
 
-    # Verify with headed browser
-    print(f"[verify] opening x.com/home to check session...")
+    # Verify session (headless, no user interaction)
+    print(f"[verify] testing session in headless browser...")
     with sync_playwright() as pw:
-        browser = pw.chromium.launch(headless=False)
+        browser = pw.chromium.launch(headless=True)
         context = browser.new_context(
             storage_state=str(session_path),
             viewport={"width": 1280, "height": 900},
@@ -115,22 +115,24 @@ def import_and_save(handle: str, cookie_json_path: Path):
         url = page.url
         if "/login" in url or "/i/flow/login" in url:
             print(f"❌ session INVALID — redirected to login ({url})")
-            print("   Coba re-export cookies dari Chrome (pastikan lagi login di x.com)")
+            print("   Re-export cookies from Chrome (make sure you're logged in on x.com)")
+            browser.close()
+            return False
         else:
-            print(f"✅ session VALID — masuk ke {url}")
-            print(f"   Save session updated & ready to use.")
-            # Re-save biar cookies fresh
+            print(f"✅ session VALID — logged in as @{handle}")
+            # Re-save with fresh cookies
             context.storage_state(path=str(session_path))
-        print(f"\nTutup browser manually, atau tekan ENTER buat close.")
-        input()
-        browser.close()
+            browser.close()
+            return True
 
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Usage: python import_cookies.py <handle>")
+        print("Usage: python import_cookies.py <handle> [--interactive]")
         print("       (looks for import/<handle>.json)")
         sys.exit(1)
     handle = sys.argv[1]
+    interactive = "--interactive" in sys.argv
     cookie_file = IMPORT_DIR / f"{handle}.json"
-    import_and_save(handle, cookie_file)
+    ok = import_and_save(handle, cookie_file, no_verify=not interactive)
+    sys.exit(0 if ok else 1)

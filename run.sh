@@ -58,6 +58,27 @@ case "$cmd" in
     [[ -z "$handle" ]] && { echo "handle required"; exit 1; }
     python import_cookies.py "$handle"
     ;;
+  refresh)
+    # Refresh cookie dari clipboard (pbpaste macOS / xclip Linux) → import
+    [[ -z "$handle" ]] && { echo "handle required"; exit 1; }
+    mkdir -p import
+    if command -v pbpaste >/dev/null 2>&1; then
+      pbpaste > "import/${handle}.json"
+    elif command -v xclip >/dev/null 2>&1; then
+      xclip -selection clipboard -o > "import/${handle}.json"
+    else
+      echo "❌ Neither pbpaste (macOS) nor xclip (Linux) found."
+      echo "   Manually save cookie JSON to: import/${handle}.json"
+      exit 1
+    fi
+    # Validate JSON
+    if ! python3 -c "import json; json.load(open('import/${handle}.json'))" 2>/dev/null; then
+      echo "❌ Clipboard is not valid JSON. Copy cookie JSON from Cookie-Editor first."
+      exit 1
+    fi
+    echo "✅ Cookie pasted from clipboard → import/${handle}.json"
+    python import_cookies.py "$handle"
+    ;;
   dry)
     [[ -z "$handle" ]] && { echo "handle required"; exit 1; }
     python main.py "$handle" --dry-run --one-shot

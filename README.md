@@ -208,12 +208,26 @@ tail -f logs/loop.out
 ```bash
 ./run.sh login <handle>              # Interactive login (backup if import fails)
 ./run.sh import <handle>             # Import cookies from import/<handle>.json
+./run.sh refresh <handle>            # ⭐ Refresh cookies from clipboard (1-step)
 ./run.sh dry <handle>                # Dry-run 1 action (no post)
 ./run.sh test <handle>               # Live 1 action
 ./run.sh loop <handle>               # Production loop
 ./run.sh read <handle> <target>      # Test scrape a target's timeline
 ./run.sh status <handle>             # Check today's post count
 ```
+
+### 🔄 Refreshing Expired Sessions (fast workflow)
+
+X cookies expire after ~30 days. When session dies, refresh in **3 steps**:
+
+1. Open `x.com` in Chrome (make sure you're logged in)
+2. Click **Cookie-Editor** → **Export** → **JSON** (auto-copies to clipboard)
+3. Run:
+   ```bash
+   ./run.sh refresh <handle>
+   ```
+
+That's it. Bot auto-pastes clipboard → validates → saves session → verifies login. Total time: ~10 seconds.
 
 ---
 
