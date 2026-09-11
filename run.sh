@@ -89,7 +89,29 @@ case "$cmd" in
     ;;
   loop)
     [[ -z "$handle" ]] && { echo "handle required"; exit 1; }
+    # Guard: pastikan cuma 1 bot jalan per handle
+    existing=$(pgrep -f "main\.py $handle" | grep -v $$ || true)
+    if [[ -n "$existing" ]]; then
+      echo "❌ Bot untuk @$handle udah jalan (PID: $existing)"
+      echo "   Kill dulu: pkill -9 -f 'main.py $handle'"
+      exit 1
+    fi
     python main.py "$handle"
+    ;;
+  stop)
+    [[ -z "$handle" ]] && { echo "handle required"; exit 1; }
+    pkill -9 -f "main\.py $handle" 2>/dev/null && echo "✅ stopped bot for @$handle" || echo "no bot running for @$handle"
+    ;;
+  restart)
+    [[ -z "$handle" ]] && { echo "handle required"; exit 1; }
+    # Kill semua bot untuk handle ini, tunggu, terus start baru
+    pkill -9 -f "main\.py $handle" 2>/dev/null
+    sleep 2
+    # Kill chromium leftover
+    pkill -9 -f "chrome-headless-shell" 2>/dev/null
+    sleep 1
+    echo "✅ old bot killed, starting fresh..."
+    exec python main.py "$handle"
     ;;
   read)
     [[ -z "$handle" ]] && { echo "handle required"; exit 1; }
