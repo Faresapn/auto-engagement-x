@@ -252,7 +252,8 @@ def main_loop(handle: str, dry_run: bool = False, one_shot: bool = False):
 
     print(f"=== x-browser-bot loop: @{handle} ===")
     print(f"   daily_max: {cfg['daily_max']}, delay: {cfg['min_delay_sec']}-{cfg['max_delay_sec']}s")
-    print(f"   mix: {cfg['mix']}, min_likes: {cfg['min_likes']}")
+    print(f"   mix: {cfg['mix']}")
+    print(f"   tiers: T1 fresh ≤{cfg.get('fresh_max_age_min',60)}m/≥{cfg.get('fresh_min_likes',100)} · T2 viral ≤{cfg.get('viral_max_age_hours',6)}h/≥{cfg.get('viral_min_likes',500)} · T3 recent ≤{cfg.get('recent_max_age_hours',6)}h/≥{cfg.get('recent_min_likes',20)}")
     print(f"   dry_run: {dry_run}, one_shot: {one_shot}")
 
     while True:
