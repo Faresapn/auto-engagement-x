@@ -1,0 +1,58 @@
+# Contoh config akun. Copy ke <handle>.yaml dan edit sesuai kebutuhan.
+handle: yourhandle
+
+# Target akun buat scrape tweet — audiens mereka = target market kamu.
+# Isi 20-50 akun yang relevan sama niche.
+targets:
+  - shadcn
+  - v0
+  - rauchg
+  - levelsio
+  - alexalbert__
+  - simonw
+  - goodside
+  - marc_louvion
+  - jackbutcher
+  - dvassallo
+  - AnthropicAI
+  - OpenAI
+  - karpathy
+
+# ═══════════════════════════════════════════════════════════════════
+# 3-TIER TARGET PICKER — prioritas engagement > velocity > recency
+# ═══════════════════════════════════════════════════════════════════
+# 🔥 T1 FRESH: umur ≤60m + likes ≥100 → paling utama (early bird)
+# 🚀 T2 VIRAL: umur ≤6h + likes ≥500 → backup (momentum kuat)
+# 🕐 T3 RECENT: umur ≤6h + likes ≥20 → fallback (fresh engagement window)
+
+fresh_max_age_min: 60
+fresh_min_likes: 100
+
+viral_max_age_hours: 6
+viral_min_likes: 500
+
+recent_max_age_hours: 6
+recent_min_likes: 20
+
+# Limit & pace
+daily_max: 12               # max tweet/hari
+min_delay_sec: 3600         # 60 menit
+max_delay_sec: 6000         # 100 menit
+
+# Mix probabilitas (total = 1.0)
+mix:
+  reply: 0.60
+  quote: 0.30
+  post: 0.10
+
+# Standalone post topics (dipilih random)
+post_topics:
+  - "one prompt shipped better landing page than 3 weeks of agency work"
+  - "the real bottleneck in shipping isnt code, its knowing what to prompt"
+  - "prompt libraries will replace half of design agencies in 2 years"
+  - "hot take on AI hype cycle"
+  - "shipped something small today, felt good"
+
+# CTA (optional — LLM sisipkan link natural kalau topic match)
+cta_url: https://yoursite.com
+cta_rate: 0.35              # 35% chance CTA disisipkan

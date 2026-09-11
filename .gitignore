@@ -1,0 +1,41 @@
+# ═══════════════════════════════════════════════════════════════════
+# CRITICAL: Never commit secrets/cookies/sessions!
+# ═══════════════════════════════════════════════════════════════════
+
+# Playwright storage state (cookies + auth tokens)
+sessions/*.json
+
+# Raw cookie exports from Chrome
+import/*.json
+
+# Per-account YAML configs (mungkin ada handle/API key custom)
+# Comment kalau lo mau share config template
+config/*.yaml
+!config/example.yaml
+
+# Transaction logs
+logs/
+state/
+
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+.Python
+.pytest_cache/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+.env
+.env.local
+*.env.local
