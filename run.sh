@@ -113,6 +113,72 @@ case "$cmd" in
     echo "✅ old bot killed, starting fresh..."
     exec python main.py "$handle"
     ;;
+  start-all)
+    # Start SEMUA akun yg punya config *.yaml (kecuali example.yaml)
+    # Tiap akun jadi background process terpisah, log ke logs/loop-<handle>.out
+    mkdir -p logs
+    started=0
+    skipped=0
+    for cfg in config/*.yaml; do
+      [[ "$cfg" == "config/example.yaml" ]] && continue
+      h=$(basename "$cfg" .yaml)
+      # Cek session file ada
+      if [[ ! -f "sessions/${h}.json" ]]; then
+        echo "  ⚠️  @${h}: no session (skip). Import cookie dulu: ./run.sh refresh $h"
+        skipped=$((skipped+1))
+        continue
+      fi
+      # Cek udah jalan
+      if pgrep -f "main\.py $h" >/dev/null 2>&1; then
+        echo "  ⏭  @${h}: udah jalan (skip)"
+        continue
+      fi
+      # Start background
+      nohup python main.py "$h" > "logs/loop-${h}.out" 2>&1 &
+      pid=$!
+      echo "  ✅ @${h}: started (PID $pid, log: logs/loop-${h}.out)"
+      started=$((started+1))
+      sleep 1  # spread start biar ga bareng
+    done
+    echo ""
+    echo "started $started bot(s), skipped $skipped (no session)"
+    ;;
+  stop-all)
+    # Kill semua bot x-browser-bot instances
+    count=$(pgrep -f "main\.py" | grep -v $$ | wc -l | tr -d ' ')
+    if [[ "$count" == "0" ]]; then
+      echo "no bots running"
+      exit 0
+    fi
+    pkill -9 -f "python.*main\.py" 2>/dev/null
+    sleep 2
+    pkill -9 -f "chrome-headless-shell" 2>/dev/null
+    echo "✅ stopped $count bot(s) + chromium cleanup"
+    ;;
+  status-all)
+    # Cek status semua akun: running/stopped + post count today
+    echo "=== all bot status ==="
+    for cfg in config/*.yaml; do
+      [[ "$cfg" == "config/example.yaml" ]] && continue
+      h=$(basename "$cfg" .yaml)
+      if pgrep -f "main\.py $h" >/dev/null 2>&1; then
+        pid=$(pgrep -f "main\.py $h" | head -1)
+        state="🟢 running (PID $pid)"
+      else
+        state="🔴 stopped"
+      fi
+      cnt=$(python -c "
+import sys; sys.path.insert(0, '.')
+try:
+    from main import today_count, load_config
+    c=load_config('$h')
+    n=today_count('$h')
+    print(f'{n}/{c[\"daily_max\"]}')
+except: print('?')
+" 2>/dev/null)
+      printf "  %-25s %s  %s posted today\n" "@$h" "$state" "$cnt"
+    done
+    ;;
   read)
     [[ -z "$handle" ]] && { echo "handle required"; exit 1; }
     target="${3:-sama}"
@@ -129,7 +195,32 @@ print(f'@$handle: {n}/{c[\"daily_max\"]} posted today (UTC)')
 "
     ;;
   help|*)
-    echo "Usage: $0 {login|import|dry|test|loop|read|status} <handle> [target-for-read]"
+    cat <<EOF
+Usage: $0 <command> [args]
+
+SINGLE ACCOUNT COMMANDS:
+  login <handle>          Interactive login (backup)
+  import <handle>         Import cookie from import/<handle>.json
+  refresh <handle>        ⭐ Auto-import cookie from clipboard (fastest)
+  dry <handle>            Dry-run 1 action (no post)
+  test <handle>           Live 1 action (posts 1x)
+  loop <handle>           Production loop (foreground)
+  restart <handle>        Kill + restart bot for handle
+  stop <handle>           Stop bot for handle
+  read <handle> <target>  Test scrape target timeline
+  status <handle>         Post count today for handle
+
+MULTI-ACCOUNT COMMANDS:
+  start-all               ⭐ Start ALL bots (background, one per config)
+  stop-all                Stop ALL running bots + chromium cleanup
+  status-all              Show status of all accounts (running + post count)
+
+EXAMPLES:
+  ./run.sh refresh anastasiavlkvv    # refresh cookie
+  ./run.sh start-all                 # launch all 4 accounts
+  ./run.sh status-all                # check who's running
+  ./run.sh stop-all                  # kill everything
+EOF
     exit 1
     ;;
 esac

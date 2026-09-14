@@ -175,13 +175,14 @@ def fetch_hot_target(handle: str, targets: list, exclude: set,
 def do_action(handle: str, action: str, cfg: dict, dry_run: bool) -> bool:
     """Execute one action. Returns True if posted successfully."""
     cta_rate = cfg.get("cta_rate", 0.0)
+    persona = cfg.get("persona")  # optional voice/personality from config
     # LLM decide sisipkan CTA organik atau nggak, based on topic match + probability
     with_cta = random.random() < cta_rate
 
     if action == "post":
         topic = random.choice(cfg["post_topics"])
         print(f"[post] topic: {topic} (with_cta={with_cta})")
-        text = gen_post(topic, with_cta=with_cta)
+        text = gen_post(topic, with_cta=with_cta, persona=persona)
         print(f"[post] text: {text!r}")
         try:
             url = post_tweet(handle, text, dry_run=dry_run)

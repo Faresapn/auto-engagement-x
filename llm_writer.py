@@ -124,20 +124,27 @@ def _call_llm(system: str, user: str, max_tokens: int = 300) -> str:
     return text.strip().strip('"').strip("'")
 
 
-def gen_reply(tweet_text: str, author: str = "someone", likes: int = 0, with_cta: bool = False) -> str:
-    system = REPLY_RULES_CTA if with_cta else REPLY_RULES
+def _persona_prefix(persona: str | None) -> str:
+    """Prefix persona to any rule set, if provided."""
+    if not persona or not persona.strip():
+        return ""
+    return f"PERSONA (adopt this voice):\n{persona.strip()}\n\n"
+
+
+def gen_reply(tweet_text: str, author: str = "someone", likes: int = 0, with_cta: bool = False, persona: str | None = None) -> str:
+    system = _persona_prefix(persona) + (REPLY_RULES_CTA if with_cta else REPLY_RULES)
     user = f"Tweet by @{author} ({likes} likes):\n\"{tweet_text}\"\n\nWrite the reply."
     return _call_llm(system, user)
 
 
-def gen_quote(tweet_text: str, author: str = "someone", likes: int = 0, with_cta: bool = False) -> str:
-    system = QUOTE_RULES_CTA if with_cta else QUOTE_RULES
+def gen_quote(tweet_text: str, author: str = "someone", likes: int = 0, with_cta: bool = False, persona: str | None = None) -> str:
+    system = _persona_prefix(persona) + (QUOTE_RULES_CTA if with_cta else QUOTE_RULES)
     user = f"Tweet by @{author} ({likes} likes):\n\"{tweet_text}\"\n\nWrite the quote-tweet."
     return _call_llm(system, user)
 
 
-def gen_post(topic: str, with_cta: bool = False) -> str:
-    system = POST_RULES_CTA if with_cta else POST_RULES
+def gen_post(topic: str, with_cta: bool = False, persona: str | None = None) -> str:
+    system = _persona_prefix(persona) + (POST_RULES_CTA if with_cta else POST_RULES)
     user = f"Topic: {topic}\n\nWrite the tweet."
     return _call_llm(system, user)
 
