@@ -179,6 +179,46 @@ except: print('?')
       printf "  %-25s %s  %s posted today\n" "@$h" "$state" "$cnt"
     done
     ;;
+  errors)
+    # Scan semua log, tampilin error/FAILED terbaru per akun
+    echo "=== recent errors (last 200 lines per log) ==="
+    for log in logs/loop-*.out; do
+      [[ ! -f "$log" ]] && continue
+      h=$(basename "$log" .out | sed 's/^loop-//')
+      errs=$(tail -200 "$log" 2>/dev/null | grep -E "❌|FAILED|Traceback|session expired|Error:" | tail -3)
+      if [[ -n "$errs" ]]; then
+        echo ""
+        echo "🔴 @${h}:"
+        echo "$errs" | sed 's/^/    /'
+      fi
+    done
+    echo ""
+    echo "=== last successful action per account ==="
+    for log in logs/loop-*.out; do
+      [[ ! -f "$log" ]] && continue
+      h=$(basename "$log" .out | sed 's/^loop-//')
+      last=$(tail -200 "$log" 2>/dev/null | grep -E "✅ (posted|replied|quoted)" | tail -1)
+      if [[ -n "$last" ]]; then
+        printf "  %-25s %s\n" "@$h" "$last"
+      else
+        printf "  %-25s (no successful action yet)\n" "@$h"
+      fi
+    done
+    ;;
+  watch)
+    # Auto-refresh status + errors setiap 30 detik
+    while true; do
+      clear
+      date
+      echo ""
+      "$0" status-all
+      echo ""
+      "$0" errors 2>/dev/null | head -30
+      echo ""
+      echo "(refreshing every 30s, Ctrl+C to exit)"
+      sleep 30
+    done
+    ;;
   read)
     [[ -z "$handle" ]] && { echo "handle required"; exit 1; }
     target="${3:-sama}"
@@ -214,11 +254,15 @@ MULTI-ACCOUNT COMMANDS:
   start-all               ⭐ Start ALL bots (background, one per config)
   stop-all                Stop ALL running bots + chromium cleanup
   status-all              Show status of all accounts (running + post count)
+  errors                  ⭐ Scan all logs, show recent errors + last success
+  watch                   Live dashboard: status + errors, refresh every 30s
 
 EXAMPLES:
   ./run.sh refresh anastasiavlkvv    # refresh cookie
   ./run.sh start-all                 # launch all 4 accounts
   ./run.sh status-all                # check who's running
+  ./run.sh errors                    # scan for errors
+  ./run.sh watch                     # live dashboard
   ./run.sh stop-all                  # kill everything
 EOF
     exit 1
